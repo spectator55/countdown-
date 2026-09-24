@@ -17,8 +17,9 @@ import java.time.Instant
 fun rememberLiveTime(intervalMillis: Long): State<Instant> {
     val owner = LocalLifecycleOwner.current
     return produceState(initialValue = Instant.now(), intervalMillis, owner) {
+        val clock = MonotonicWallClock()
+        value = clock.now() // Also initialize directly in the producer before the lifecycle starts.
         owner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            val clock = MonotonicWallClock()
             while (isActive) {
                 value = clock.now()
                 if (intervalMillis <= 16) withFrameNanos { } else delay(intervalMillis)
