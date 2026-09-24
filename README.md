@@ -6,7 +6,7 @@ Native Android 15+ countdown app (Kotlin, Jetpack Compose Material 3). This repo
 
 1. Open the repository root in Android Studio (JDK 17; Android SDK Platform 35). Gradle 8.9 is included via the standard Gradle Wrapper.
 2. Sync Gradle and run the `app` configuration on an Android 15 / API 35 or later device or emulator.
-3. From a terminal: `./gradlew testDebugUnitTest assembleDebug`.
+3. From a terminal: `./gradlew testDebugUnitTest assembleDebug assembleRelease lintDebug`.
 
 The debug APK is a **build output**, not part of this source repository. A GitHub Actions workflow performs the same build on pushes. The official Gradle wrapper JAR is included because Android Studio/`./gradlew` require it.
 

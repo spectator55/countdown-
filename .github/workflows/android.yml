@@ -25,4 +25,18 @@ jobs:
             sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0'
           fi
       - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew --no-daemon testDebugUnitTest assembleDebug
+      - name: Build, test, and lint
+        run: |
+          set -o pipefail
+          ./gradlew --no-daemon testDebugUnitTest assembleDebug assembleRelease lintDebug 2>&1 | tee "$RUNNER_TEMP/countdown-build.log" || {
+            {
+              echo '### Android build failure'
+              echo '```text'
+              tail -n 100 "$RUNNER_TEMP/countdown-build.log"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            tail -n 30 "$RUNNER_TEMP/countdown-build.log" | while IFS= read -r line; do
+              echo "::error::${line//%/%25}"
+            done
+            exit 1
+          }

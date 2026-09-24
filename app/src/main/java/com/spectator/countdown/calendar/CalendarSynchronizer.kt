@@ -6,6 +6,7 @@ import com.spectator.countdown.data.AppDatabase
 import com.spectator.countdown.data.CalendarSelectionEntity
 import com.spectator.countdown.data.CountdownEntity
 import com.spectator.countdown.widget.CountdownWidgetUpdater
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -82,12 +83,14 @@ class CalendarSynchronizer(
                 val fetched = selectedKeys.mapNotNull(calendars::get).flatMap { calendar ->
                     provider.occurrences(calendar, from, until)
                 }.associateBy(CalendarProvider.Occurrence::key)
-                val hidden = db.hiddenImports().allKeys().toSet()
-                val initial = db.countdowns().imported().associateBy { requireNotNull(it.sourceKey) }
                 var added = 0
                 var changed = 0
                 var removed = 0
                 db.withTransaction {
+                    // Take the snapshot inside the transaction. A user may edit or hide an
+                    // import while the provider query is running; never overwrite that edit.
+                    val hidden = db.hiddenImports().allKeys().toSet()
+                    val initial = db.countdowns().imported().associateBy { requireNotNull(it.sourceKey) }
                     fetched.forEach { (key, occurrence) ->
                         if (key in hidden) return@forEach
                         val previous = initial[key]
@@ -135,6 +138,9 @@ class CalendarSynchronizer(
             }
             _status.value = result
             result
+        } catch (cancelled: CancellationException) {
+            _status.value = SyncStatus.Idle
+            throw cancelled
         } catch (error: Exception) {
             _status.value = SyncStatus.Failed(error.message ?: "The calendar could not be synchronized.")
             throw error

@@ -22,7 +22,9 @@ class CalendarAutoSync(
     private val preferences: AppPreferences,
     private val synchronizer: CalendarSynchronizer
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    // Observer registration and the debounced job are serialized on the main looper;
+    // provider and Room work itself switches to Dispatchers.IO in the synchronizer.
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var observer: ContentObserver? = null
     private var pending: Job? = null
 
