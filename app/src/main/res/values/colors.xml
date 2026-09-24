@@ -1,0 +1,8 @@
+<resources>
+    <color name="launcher_background">#123B40</color>
+    <color name="widget_surface">#143D42</color>
+    <color name="widget_text">#F1FAF7</color>
+    <color name="widget_muted">#B7D1CC</color>
+    <color name="widget_accent">#B6F0D8</color>
+    <color name="widget_track">#3D6265</color>
+</resources>
