@@ -12,11 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - run: sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0'
+      # GitHub's Android runner includes command-line tools. Avoid a third-party SDK
+      # bootstrap action; only install platform/build tools if this image needs them.
+      - name: Ensure Android 35 SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          if [ ! -f "$ANDROID_HOME/platforms/android-35/android.jar" ] || [ ! -d "$ANDROID_HOME/build-tools/35.0.0" ]; then
+            sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0'
+          fi
       - uses: gradle/actions/setup-gradle@v4
       - run: ./gradlew --no-daemon testDebugUnitTest assembleDebug
