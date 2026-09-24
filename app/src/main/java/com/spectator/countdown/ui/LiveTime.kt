@@ -1,8 +1,10 @@
 package com.spectator.countdown.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
@@ -16,14 +18,15 @@ import java.time.Instant
 @Composable
 fun rememberLiveTime(intervalMillis: Long): State<Instant> {
     val owner = LocalLifecycleOwner.current
-    return produceState(initialValue = Instant.now(), intervalMillis, owner) {
+    val time = remember(intervalMillis, owner) { mutableStateOf(Instant.now()) }
+    LaunchedEffect(intervalMillis, owner) {
         val clock = MonotonicWallClock()
-        value = clock.now() // Also initialize directly in the producer before the lifecycle starts.
         owner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             while (isActive) {
-                value = clock.now()
+                time.value = clock.now()
                 if (intervalMillis <= 16) withFrameNanos { } else delay(intervalMillis)
             }
         }
     }
+    return time
 }
